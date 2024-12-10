@@ -1,4 +1,4 @@
-import s from './SearchBox.module.css';
+import s from "./SearchBox.module.css";
 
 const SearchBox = ({ filter, onChange }) => (
   <label className={s.searchBox}>
@@ -6,7 +6,7 @@ const SearchBox = ({ filter, onChange }) => (
     <input
       type="text"
       value={filter}
-      onChange={e => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value)}
       className={s.input}
     />
   </label>

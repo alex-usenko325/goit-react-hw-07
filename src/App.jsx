@@ -1,46 +1,65 @@
-import { useState, useEffect } from "react";
-import { nanoid } from "nanoid";
+import { useDispatch, useSelector } from "react-redux";
+import { changeFilter } from "./redux/filtersSlice";
+import { selectNameFilter } from "./redux/filtersSlice";
+
+import SearchBox from "./components/SearchBox/SearchBox";
 import ContactForm from "./components/ContactForm/ContactForm";
 import ContactList from "./components/ContactList/ContactList";
-import SearchBox from "./components/SearchBox/SearchBox";
+
+import toast, { Toaster } from "react-hot-toast";
+import { ClipLoader } from "react-spinners";
+import { useEffect } from "react";
+import { fetchContacts } from "./redux/contactsOps";
+import { selectLoading, selectError } from "./redux/contactsSlice";
+
 import "./App.css";
 
 const App = () => {
-  const [contacts, setContacts] = useState(() => {
-    const savedContacts = localStorage.getItem("contacts");
-    return savedContacts ? JSON.parse(savedContacts) : initialContacts;
-  });
-
-  const [filter, setFilter] = useState("");
+  const dispatch = useDispatch();
+  const loading = useSelector(selectLoading);
+  const error = useSelector(selectError);
+  const filter = useSelector(selectNameFilter);
 
   useEffect(() => {
-    localStorage.setItem("contacts", JSON.stringify(contacts));
-  }, [contacts]);
+    dispatch(fetchContacts());
+  }, [dispatch]);
 
-  const addContact = (name, number) => {
-    const newContact = { id: nanoid(), name, number };
-    setContacts((prevContacts) => [...prevContacts, newContact]);
-  };
-
-  const deleteContact = (id) => {
-    setContacts((prevContacts) =>
-      prevContacts.filter((contact) => contact.id !== id)
-    );
-  };
-
-  const filteredContacts = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(filter.toLowerCase())
-  );
+  useEffect(() => {
+    if (error) {
+      toast.error(`Error: ${error}`, {
+        duration: 4000,
+        position: "top-center",
+        style: {
+          background: "#f44336",
+          color: "#fff",
+          fontWeight: "bold",
+        },
+      });
+    }
+  }, [error]);
 
   return (
-    <div className="App">
+    <div>
       <h1>Phonebook</h1>
-      <ContactForm onAddContact={addContact} />
-      <SearchBox filter={filter} onChange={setFilter} />
-      <ContactList
-        contacts={filteredContacts}
-        onDeleteContact={deleteContact}
+      <ContactForm />
+      <h2>Contacts</h2>
+
+      <SearchBox
+        filter={filter}
+        onChange={(value) => dispatch(changeFilter(value))}
       />
+
+      {loading && (
+        <div
+          style={{ display: "flex", justifyContent: "center", margin: "20px" }}
+        >
+          <ClipLoader size={50} color="#4fa94d" />
+        </div>
+      )}
+
+      {error && <Toaster />}
+
+      <ContactList />
     </div>
   );
 };
