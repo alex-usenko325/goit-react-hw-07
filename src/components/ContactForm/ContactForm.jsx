@@ -2,19 +2,35 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useDispatch } from "react-redux";
 import { addContact } from "../../redux/contactsOps";
+import { useState } from "react";
 import s from "./ContactForm.module.css";
 
 const ContactForm = () => {
   const dispatch = useDispatch();
+  const [error, setError] = useState(null);
 
   const validationSchema = Yup.object({
-    name: Yup.string().min(3).max(50).required("Required"),
-    number: Yup.string().min(3).max(50).required("Required"),
+    name: Yup.string()
+      .min(3, "Name must be at least 3 characters")
+      .max(50, "Name is too long")
+      .required("Required"),
+    number: Yup.string()
+      .min(3, "Number must be at least 3 characters")
+      .max(50, "Number is too long")
+      .required("Required"),
   });
 
-  const handleSubmit = (values, { resetForm }) => {
-    dispatch(addContact({ name: values.name, number: values.number }));
-    resetForm();
+  const handleSubmit = async (values, { resetForm }) => {
+    try {
+      setError(null);
+      await dispatch(
+        addContact({ name: values.name, number: values.number })
+      ).unwrap();
+      resetForm();
+    } catch (err) {
+      setError("Failed to add contact. Please try again.");
+      console.error("Error adding contact:", err);
+    }
   };
 
   return (
@@ -38,6 +54,7 @@ const ContactForm = () => {
           <Field type="text" name="number" id="number" className={s.input} />
           <ErrorMessage name="number" component="div" className={s.error} />
         </div>
+        {error && <div className={s.error}>{error}</div>}
         <button type="submit" className={s.button}>
           Add Contact
         </button>
